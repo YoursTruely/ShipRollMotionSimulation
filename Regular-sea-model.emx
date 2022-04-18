@@ -1,0 +1,650 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document>
+ <Model version="4.8" build="4.8.2.10124">
+  <Sidops><![CDATA[model 128 184
+ description '<Information>
+ <Description>
+    <Version>4.8</Version>
+<IsMainModel>0</IsMainModel>
+  <KeepParameterValues>False</KeepParameterValues>
+    <LibraryPath>C:\Users\sbi\Google Drive\Sync main\NTNU\MSDS\Final Project\regular-sea-model.emx</LibraryPath>
+  <TimeStamp>2020-12-9 14:58:46</TimeStamp>
+</Description>
+</Information>';
+ type 'Mainmodel-model'
+ end;
+ implementation bg
+  submodels
+   Damping_moment 584 392
+    description '<Information><Description><Version>4.2</Version><IsMainModel>1</IsMainModel><KeepParameterValues>False</KeepParameterValues><LibraryPath>Bond Graph\MR.emx</LibraryPath><TimeStamp>2011-11-29 16:09:29</TimeStamp><AllowLibraryUpdate>True</AllowLibraryUpdate></Description></Information>';
+    type MR
+     ports
+      power in p;
+      signal in w;
+    end;
+    icon bg bottom
+     figures
+      text 'MR' 584 392 color 0 18 bold;
+    end;
+    implementation eq
+parameters
+	real B = 25.4;
+	real T = 9.5;
+	real L = 175;
+	real global g = 9.81;
+	real global density;
+	
+
+variables
+	real r;
+	real b_44;
+	real A;
+
+	
+equations
+
+	A = B*T;
+	b_44 = sqrt(2*g/B)*density*A*B^2*(0.256*(B/T)-0.286)*exp((-0.11*(B/T)-2.55)*(w^(-1.3)))*(w^(0.33*(B/T)-0.459));
+	r = L*b_44;
+	p.e = r * p.f;
+	
+
+
+implementation_end;
+   Excitation_moment 760 280
+    description '<Information><Description><Version>4.2</Version><IsMainModel>1</IsMainModel><KeepParameterValues>False</KeepParameterValues><LibraryPath>Bond Graph\MSe.emx</LibraryPath><TimeStamp>2011-11-29 16:12:33</TimeStamp><AllowLibraryUpdate>True</AllowLibraryUpdate></Description></Information>';
+    type MSe
+     ports
+      power out p;
+      signal in input [2,1];
+     restrictions
+      causality fixed out p;
+    end;
+    icon bg right
+     figures
+      text 'MSe' 760 280 color 0 18 bold;
+    end;
+    implementation eq
+parameters
+	real global Displacement;
+	real global GM;
+	real global g;
+
+variables
+	real flow;
+	real omega;
+	real wave_load;
+	real wave;
+	
+
+equations
+	omega = input[2,1];
+	wave = input[1,1];
+	wave_load = Displacement*GM*omega^2*wave/g;
+	p.e = wave_load;
+	flow = p.f;
+implementation_end;
+   Inertia 664 200
+    description '<Information><Description><Version>4.2</Version><IsMainModel>1</IsMainModel><KeepParameterValues>False</KeepParameterValues><LibraryPath>Bond Graph\I.emx</LibraryPath><TimeStamp>2011-11-29 15:55:55</TimeStamp><AllowLibraryUpdate>True</AllowLibraryUpdate></Description></Information>';
+    type I
+     ports
+      power in p;
+      signal out state;
+     restrictions
+      causality preferred in p;
+    end;
+    icon bg right
+     figures
+      text 'I' 664 200 color 0 18 bold;
+    end;
+    implementation eq
+parameters
+	real global Displacement = 24743500;
+	real global k_xx = 8.3;
+
+variables
+	real global I_xx;
+	real i;
+	
+equations
+	I_xx = 1.2*Displacement*k_xx^2;
+	i = I_xx;
+   state = int(p.e);
+   p.f = state / i;
+implementation_end;
+   OneJunction 664 280
+    description '<Information>
+ <Description>
+    <Version>4.2</Version>
+<IsMainModel>1</IsMainModel>
+  <KeepParameterValues>False</KeepParameterValues>
+    <LibraryPath>Bond Graph\OneJunction.emx</LibraryPath>
+  <TimeStamp>2011-11-29 16:17:51</TimeStamp>
+</Description>
+</Information>';
+    knot OneJunction
+     ports
+      power knot duplicatable none p [1];
+      signal knot out flow [1];
+     restrictions
+      causality constraint one_out p;
+    end;
+    icon bg
+     figures
+      text '1' 664 280 color 0 18 bold;
+    end;
+    implementation eq
+equations
+	sum (direct (p.e)) = 0;
+	equal (collect (p.f));
+	flow = first (p.f);
+implementation_end;
+   OneJunction1 504 280
+    description '<Information>
+ <Description>
+    <Version>4.2</Version>
+<IsMainModel>1</IsMainModel>
+  <KeepParameterValues>False</KeepParameterValues>
+    <LibraryPath>Bond Graph\OneJunction.emx</LibraryPath>
+  <TimeStamp>2011-11-29 16:17:51</TimeStamp>
+</Description>
+</Information>';
+    knot OneJunction
+     ports
+      power knot duplicatable none p [1];
+      signal knot out flow [1];
+     restrictions
+      causality constraint one_out p;
+    end;
+    icon bg
+     figures
+      text '1' 504 280 color 0 18 bold;
+    end;
+    implementation eq
+equations
+	sum (direct (p.e)) = 0;
+	equal (collect (p.f));
+	flow = first (p.f);
+implementation_end;
+   Restoring_Moment 584 168
+    description '<Information><Description><Version>4.2</Version><IsMainModel>1</IsMainModel><KeepParameterValues>False</KeepParameterValues><LibraryPath>Bond Graph\C.emx</LibraryPath><TimeStamp>2011-11-29 15:58:35</TimeStamp><AllowLibraryUpdate>True</AllowLibraryUpdate></Description></Information>';
+    type C
+     ports
+      power in p;
+      signal out state;
+     restrictions
+      causality preferred out p;
+    end;
+    icon bg top
+     figures
+      text 'C' 584 168 color 0 18 bold;
+    end;
+    implementation eq
+parameters
+	real global Displacement;
+	real global density = 1025;
+	real global GM = 1;
+	
+variables
+	real c;
+	real K;
+	real deg;
+	
+equations
+	K = Displacement*GM;
+	c = 1/K;
+	state = int(p.f);
+	p.e = state / c;
+	deg = state*180/pi;
+
+implementation_end;
+   Sf 400 280
+    description '<Information>
+ <Description>
+    <Version>4.2</Version>
+<IsMainModel>1</IsMainModel>
+  <KeepParameterValues>False</KeepParameterValues>
+    <LibraryPath>Bond Graph\Sf.emx</LibraryPath>
+  <TimeStamp>2011-11-29 16:38:03</TimeStamp>
+</Description>
+</Information>';
+    type Sf
+     ports
+      power out p;
+     restrictions
+      causality fixed in p;
+    end;
+    icon bg bottom
+     figures
+      text 'Sf' 400 280 color 0 18 bold;
+    end;
+    implementation eq
+parameters
+	real flow = 0;
+variables
+	real effort;
+equations
+	p.f = flow;
+	effort = p.e;
+implementation_end;
+   Wave_input 760 392
+    description '<Information><Description><Version>4.0</Version><IsMainModel>1</IsMainModel><KeepParameterValues>False</KeepParameterValues><LibraryPath>Signal\Sources\WaveGenerator-Sine.emx</LibraryPath><TimeStamp>2007-9-27 16:12:6</TimeStamp><AllowLibraryUpdate>True</AllowLibraryUpdate></Description></Information>';
+    type 'WaveGenerator-Sine'
+     ports
+      signal out w;
+      signal out wave [2,1];
+    end;
+    icon bg bottom
+     figures
+      group
+       rectangle 744 376 776 408 color 0 fill 15132390;
+       line 748.5 382.4 748.5 401.6 color 0;
+       line 774.1 392 745.3 392 color 0;
+       spline 748.9 391.9 752.1 383.8 755.3 391.9 758.6 400 761.7 391.9 764.8 383.8 768.1 391.9 771.6 400.2 774.8 392.2 color 16711680;
+      end;
+    end;
+    implementation eq
+parameters
+	real amplitude = 10;			// amplitude of the wave
+	real T = 50;		// Time period of the wave
+	
+variables
+	real omega;
+
+	
+equations
+	omega = 2*pi/T;
+	"calculate the sine wave"
+	wave[1,1] = amplitude * sin ( omega * time);
+	wave[2,1] = omega;
+	
+	w = omega;
+	
+	
+implementation_end;
+   ZeroJunction 584 232
+    description '<Information>
+ <Description>
+    <Version>4.2</Version>
+<IsMainModel>1</IsMainModel>
+  <KeepParameterValues>False</KeepParameterValues>
+    <LibraryPath>Bond Graph\ZeroJunction.emx</LibraryPath>
+  <TimeStamp>2011-11-29 16:45:16</TimeStamp>
+</Description>
+</Information>';
+    knot ZeroJunction
+     ports
+      power knot duplicatable none p [1];
+      signal knot out effort [1];
+     restrictions
+      causality constraint one_in p;
+    end;
+    icon bg
+     figures
+      text '0' 584 232 color 0 18 bold;
+    end;
+    implementation eq
+equations
+	sum (direct (p.f)) = 0;
+	equal (collect (p.e));
+	effort = first (p.e);
+implementation_end;
+   ZeroJunction1 584 328
+    description '<Information>
+ <Description>
+    <Version>4.2</Version>
+<IsMainModel>1</IsMainModel>
+  <KeepParameterValues>False</KeepParameterValues>
+    <LibraryPath>Bond Graph\ZeroJunction.emx</LibraryPath>
+  <TimeStamp>2011-11-29 16:45:16</TimeStamp>
+</Description>
+</Information>';
+    knot ZeroJunction
+     ports
+      power knot duplicatable none p [1];
+      signal knot out effort [1];
+     restrictions
+      causality constraint one_in p;
+    end;
+    icon bg
+     figures
+      text '0' 584 328 color 0 18 bold;
+    end;
+    implementation eq
+equations
+	sum (direct (p.f)) = 0;
+	equal (collect (p.e));
+	effort = first (p.e);
+implementation_end;
+  end;
+  connections
+   Excitation_moment\p => OneJunction\p;
+   Inertia\p <= OneJunction\p;
+   OneJunction\p => ZeroJunction\p;
+   OneJunction\p => ZeroJunction1\p;
+   OneJunction1\p <= Sf\p;
+   Restoring_Moment\p <= ZeroJunction\p;
+   Wave_input\w -> Damping_moment\w;
+   Wave_input\wave -> Excitation_moment\input;
+   ZeroJunction\p => OneJunction1\p;
+   ZeroJunction1\p => Damping_moment\p;
+   ZeroJunction1\p => OneJunction1\p;
+  end;
+ implementation_end;
+]]>
+</Sidops>
+ </Model>
+ <Experiments>
+     <DefaultExperiment><![CDATA[Experiment 1]]>
+</DefaultExperiment>
+  <Experiment>
+    <Name>Experiment 1</Name>
+    <CreatedBy></CreatedBy>
+    <Info></Info>
+<ExpData>
+  <VersionNumber>4.8</VersionNumber>
+  <ModelProperties>
+  </ModelProperties>
+  <Variables>
+   <Constants>
+   </Constants>
+   <Parameters>
+   </Parameters>
+   <Initials>
+    <Variable>
+     <Name>Inertia\state_initial</Name>
+     <Value>0</Value>
+    </Variable>
+    <Variable>
+     <Name>Restoring_Moment\state_initial</Name>
+     <Value>0</Value>
+    </Variable>
+   </Initials>
+  </Variables>
+  <PlotSpecs>
+   <VarNames>
+    <VarName>time</VarName>
+    <VarName>Restoring_Moment\deg</VarName>
+   </VarNames>
+   <Plots>
+    <Plot>
+     <PlotType>GraphPlot</PlotType>
+     <BasePlot>
+       <PlotId>2</PlotId>
+       <UseWindowsBGColor>false</UseWindowsBGColor>
+       <BGColor>16777215</BGColor>
+       <PlotIsVisible>true</PlotIsVisible>
+     </BasePlot>
+     <Grid>
+      <DrawGrid>true</DrawGrid>
+      <GridColor>15780518</GridColor>
+      <GridBorderLineColor>12624260</GridBorderLineColor>
+      <GridZeroLineColor>0</GridZeroLineColor>
+      <XTicks>10</XTicks>
+      <YTicks>10</YTicks>
+      <ZTicks>10</ZTicks>
+      <Use3DLook>false</Use3DLook>
+     </Grid>
+     <PlotBGColor>16777215</PlotBGColor>
+     <ShowPlotTitle>true</ShowPlotTitle>
+     <TitlePosition>1</TitlePosition>
+     <PlotTitle>Amplitude = 10m, T = 50s</PlotTitle>
+     <ShowXValues>true</ShowXValues>
+     <Fonts>
+      <TitleFont>
+       <Name>Arial</Name>
+       <Height>12</Height>
+       <PitchFamily>34</PitchFamily>
+       <Weight>400</Weight>
+       <Italic>0</Italic>
+       <UnderLine>0</UnderLine>
+       <StrikeOut>0</StrikeOut>
+       <Color>0</Color>
+      </TitleFont>
+      <LabelFont>
+       <Name>Arial</Name>
+       <Height>12</Height>
+       <PitchFamily>34</PitchFamily>
+       <Weight>400</Weight>
+       <Italic>0</Italic>
+       <UnderLine>0</UnderLine>
+       <StrikeOut>0</StrikeOut>
+       <Color>0</Color>
+      </LabelFont>
+      <ValuesFont>
+       <Name>Arial</Name>
+       <Height>10</Height>
+       <PitchFamily>34</PitchFamily>
+       <Weight>400</Weight>
+       <Italic>0</Italic>
+       <UnderLine>0</UnderLine>
+       <StrikeOut>0</StrikeOut>
+       <Color>0</Color>
+      </ValuesFont>
+      <LegendFont>
+       <Name>Arial</Name>
+       <Height>12</Height>
+       <PitchFamily>34</PitchFamily>
+       <Weight>400</Weight>
+       <Italic>0</Italic>
+       <UnderLine>0</UnderLine>
+       <StrikeOut>0</StrikeOut>
+       <Color>0</Color>
+      </LegendFont>
+     </Fonts>
+     <SharedXAxis>true</SharedXAxis>
+     <SharedYAxis>true</SharedYAxis>
+     <SharedZAxis>false</SharedZAxis>
+     <XAxes>
+      <Axis>
+       <Minimum>0.0</Minimum>
+       <Maximum>2000.0</Maximum>
+       <Linear>true</Linear>
+       <Scaling>0</Scaling>
+       <Label>time</Label>
+      </Axis>
+     </XAxes>
+     <YAxes>
+      <Axis>
+       <Minimum>-10.0</Minimum>
+       <Maximum>10.0</Maximum>
+       <Linear>true</Linear>
+       <Scaling>2</Scaling>
+       <Label>Roll angle</Label>
+      </Axis>
+     </YAxes>
+     <ZAxes>
+     </ZAxes>
+     <Curves>
+      <Curve>
+       <LineColor>3355111</LineColor>
+       <LineStyle>1</LineStyle>
+       <TickColor>3355111</TickColor>
+       <TickStyle>0</TickStyle>
+       <CurveVisible>true</CurveVisible>
+       <PixelThresshold>1</PixelThresshold>
+       <LineThickness>2</LineThickness>
+       <LineOrder>1</LineOrder>
+       <ShowYValues>true</ShowYValues>
+       <XCurveData>
+        <ShowUnit>true</ShowUnit>
+        <VarName>time</VarName>
+       </XCurveData>
+       <YCurveData>
+        <ShowUnit>true</ShowUnit>
+        <VarName>Restoring_Moment\deg</VarName>
+       </YCurveData>
+      </Curve>
+     </Curves>
+     <Legenda>
+      <ShowLegenda>true</ShowLegenda>
+      <BorderPenColor>0</BorderPenColor>
+      <BackgroundColor>16777215</BackgroundColor>
+     </Legenda>
+    </Plot>
+   </Plots>
+   <PlotPanels>
+    <PlotPanel>
+     <PlotPanelId>1</PlotPanelId>
+     <PlotPanelVisible>true</PlotPanelVisible>
+     <Name>Window 1</Name>
+     <Tiling>2</Tiling>
+     <PlotIds>
+       <PlotId>2</PlotId>
+     </PlotIds>
+     <ToggleState>Base</ToggleState>
+    </PlotPanel>
+   </PlotPanels>
+   <WindowRectangles virtualDesktopWidth="1440" virtualDesktopHeight="900">
+     <WindowRectangle monitor="0" left="0" top="0" right="1440" bottom="900" plotpanelid="1">
+-0.00555556 -0.00888889 1.00556 0.964444
+     </WindowRectangle>
+   </WindowRectangles>
+  </PlotSpecs>
+  <RunSpecs>
+   <SimulatorSettings>
+    <StartTime>0.0</StartTime>
+    <FinishTime>2000.0</FinishTime>
+    <AllowPassFinishTime>false</AllowPassFinishTime>
+    <Warp>false</Warp>
+    <FPGonio>false</FPGonio>
+    <UseOutputAfterEach>false</UseOutputAfterEach>
+    <OutputAfterEach>0.1</OutputAfterEach>
+    <EventEpsilon>1.0e-6</EventEpsilon>
+    <AlgebraicTolerance>1.0e-7</AlgebraicTolerance>
+    <SteadyStateAnalysis>false</SteadyStateAnalysis>
+    <UpdateHoldInstructions>true</UpdateHoldInstructions>
+   </SimulatorSettings>
+   <IntegrationMethods>
+    <IntegrationMethod>
+     <Name>Euler</Name>
+     <StepSize>0.01</StepSize>
+     <AutoStepSize>false</AutoStepSize>
+    </IntegrationMethod>
+    <IntegrationMethod>
+     <Name>BackwardEuler</Name>
+     <AbsoluteTolerance>1.0e-5</AbsoluteTolerance>
+     <RelativeTolerance>1.0e-5</RelativeTolerance>
+     <AlgebraicAbsoluteTolerance>1.0e-5</AlgebraicAbsoluteTolerance>
+     <AlgebraicRelativeTolerance>1.0e-5</AlgebraicRelativeTolerance>
+     <StepSize>0.01</StepSize>
+     <Alpha>1.0</Alpha>
+    </IntegrationMethod>
+    <IntegrationMethod>
+     <Name>AdamsBashforth</Name>
+     <StepSize>0.01</StepSize>
+     <AutoStepSize>false</AutoStepSize>
+    </IntegrationMethod>
+    <IntegrationMethod>
+     <Name>RungeKutta2</Name>
+     <StepSize>0.01</StepSize>
+     <AutoStepSize>false</AutoStepSize>
+    </IntegrationMethod>
+    <IntegrationMethod>
+     <Name>RungeKutta4</Name>
+     <StepSize>0.01</StepSize>
+     <AutoStepSize>false</AutoStepSize>
+    </IntegrationMethod>
+    <IntegrationMethod>
+     <Name>RungeKutta8</Name>
+     <UseInitialStepSize>false</UseInitialStepSize>
+     <InitialStepSize>0.0</InitialStepSize>
+     <UseMaximumStepSize>false</UseMaximumStepSize>
+     <MaximumStepSize>0.0</MaximumStepSize>
+     <AbsoluteTolerance>1.0e-6</AbsoluteTolerance>
+     <RelativeTolerance>1.0e-6</RelativeTolerance>
+     <SafetyFactor>0.9</SafetyFactor>
+     <Factor1>0.33</Factor1>
+     <Factor2>6.0</Factor2>
+     <Beta>0.0</Beta>
+     <UseMaxNrSteps>false</UseMaxNrSteps>
+     <MaxNrSteps>100000</MaxNrSteps>
+     <UseStiffDetection>false</UseStiffDetection>
+     <MaxNrStiffnessSteps>1000</MaxNrStiffnessSteps>
+    </IntegrationMethod>
+    <IntegrationMethod>
+     <Name>RungeKuttaFehlberg</Name>
+     <UseInitialStepSize>false</UseInitialStepSize>
+     <InitialStepSize>0.0</InitialStepSize>
+     <UseMaximumStepSize>false</UseMaximumStepSize>
+     <MaximumStepSize>0.0</MaximumStepSize>
+     <AbsoluteTolerance>1.0e-6</AbsoluteTolerance>
+     <RelativeTolerance>1.0e-6</RelativeTolerance>
+    </IntegrationMethod>
+    <IntegrationMethod>
+     <Name>VodeAdams</Name>
+     <UseInitialStepSize>false</UseInitialStepSize>
+     <InitialStepSize>0.0</InitialStepSize>
+     <UseMaximumStepSize>false</UseMaximumStepSize>
+     <MaximumStepSize>0.0</MaximumStepSize>
+     <AbsoluteTolerance>1.0e-6</AbsoluteTolerance>
+     <RelativeTolerance>1.0e-6</RelativeTolerance>
+     <VodeUseBDF>true</VodeUseBDF>
+     <VodeUseNewton>true</VodeUseNewton>
+    </IntegrationMethod>
+    <IntegrationMethod>
+     <Name>BDFMethod</Name>
+     <AbsoluteTolerance>1.0e-5</AbsoluteTolerance>
+     <RelativeTolerance>1.0e-5</RelativeTolerance>
+     <AlgebraicAbsoluteTolerance>1.0e-5</AlgebraicAbsoluteTolerance>
+     <AlgebraicRelativeTolerance>1.0e-5</AlgebraicRelativeTolerance>
+     <UseInitialStepSize>false</UseInitialStepSize>
+     <InitialStepSize>0.0</InitialStepSize>
+     <UseMaximumStepSize>false</UseMaximumStepSize>
+     <MaximumStepSize>0.0</MaximumStepSize>
+    </IntegrationMethod>
+    <IntegrationMethod>
+     <Name>MeBDFiMethod</Name>
+     <AbsoluteTolerance>1.0e-5</AbsoluteTolerance>
+     <RelativeTolerance>1.0e-5</RelativeTolerance>
+     <AlgebraicAbsoluteTolerance>1.0e-5</AlgebraicAbsoluteTolerance>
+     <AlgebraicRelativeTolerance>1.0e-5</AlgebraicRelativeTolerance>
+     <UseInitialStepSize>false</UseInitialStepSize>
+     <InitialStepSize>0.0</InitialStepSize>
+     <UseMaximumStepSize>false</UseMaximumStepSize>
+     <MaximumStepSize>0.0</MaximumStepSize>
+    </IntegrationMethod>
+    <SelectedIntegrationMethod>8</SelectedIntegrationMethod>
+   </IntegrationMethods>
+  </RunSpecs>
+  <MultipleRun>
+   <NrSteps>10</NrSteps>
+   <CopyFromStates>false</CopyFromStates>
+   <JoinParameterVariation>true</JoinParameterVariation>
+   <ClearAfterRun>true</ClearAfterRun>
+   <RedrawAfterRun>false</RedrawAfterRun>
+   <DrawDuringSimulation>true</DrawDuringSimulation>
+   <ActionBeforeOptimization>0</ActionBeforeOptimization>
+   <CompareValue>0.0</CompareValue>
+   <UseCompareValue>true</UseCompareValue>
+   <MultipleRunType>MultipleRun</MultipleRunType>
+   <Minimize>true</Minimize>
+   <OptimizationVariable></OptimizationVariable>
+   <ResulVarUsage>UseEndValue</ResulVarUsage>
+   <Tolerance>0.001</Tolerance>
+   <OptimizationMethod>BroydonFletcherGoldfarbShanno</OptimizationMethod>
+   <MultipleRunVariables>
+   </MultipleRunVariables>
+  </MultipleRun>
+  <ExportData>
+   <WriteAsText>true</WriteAsText>
+   <ReadAsText>true</ReadAsText>
+   <WriteHeader>true</WriteHeader>
+   <ReadHeader>true</ReadHeader>
+   <ReadFilename></ReadFilename>
+   <WriteFilename></WriteFilename>
+   <DoWrite>false</DoWrite>
+   <ExportVariables>
+   </ExportVariables>
+   <ImportVariables>
+   </ImportVariables>
+  </ExportData>
+  <BreakPoints>
+  </BreakPoints>
+  <AnimationPlayback>
+   <PlaybackSpeed>1.0</PlaybackSpeed>
+  </AnimationPlayback>
+</ExpData>
+  </Experiment>
+</Experiments>
+</Document>
