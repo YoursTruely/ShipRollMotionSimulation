@@ -1,4 +1,4 @@
-# ShipRollMotionSimulation
+# Ship Roll Motion Simulation
 Roll motion simulation of a container ship in regular and random waves using Bond-Graph Modelling in 20 Sim.
 
 
